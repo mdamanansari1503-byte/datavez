@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Datavez — Case File Vault</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1C1A15">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F8F9FB;
+    --surface:#FFFFFF;
+    --surface-raised:#F6F7F9;
+    --paper:#FFFFFF;
+    --border:#E7E8ED;
+    --border-strong:#D4D6DE;
+    --text:#16181D;
+    --text-muted:#75798A;
+    --danger:#DC2626;
+    --danger-soft:#FEF2F2;
+    --success:#16A34A;
+    --radius:12px;
+
+    --accent-1:#4F46E5;
+    --accent-2:#4338CA;
+    --accent-soft:#EEF0FD;
+  }
+  html[data-theme="blue"]{ --accent-1:#2563EB; --accent-2:#1D4ED8; --accent-soft:#EBF2FE; }
+  html[data-theme="green"]{ --accent-1:#0D9488; --accent-2:#0F766E; --accent-soft:#EBFAF8; }
+  html[data-theme="rose"]{ --accent-1:#DB2777; --accent-2:#BE185D; --accent-soft:#FDF0F6; }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{background:var(--bg);overscroll-behavior-y:contain;}
+  body{
+    overscroll-behavior-y:contain;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding-bottom:110px;
+  }
+  ::selection{background:var(--accent-soft);color:var(--accent-2);}
+
+  /* Install banner */
+  .install-banner{
+    display:none;align-items:center;justify-content:space-between;gap:10px;
+    background:linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color:#fff;padding:12px 16px;
+  }
+  .install-banner.show{display:flex;}
+  .install-banner-text{display:flex;flex-direction:column;gap:1px;}
+  .install-banner-text b{font-family:'Inter';font-weight:700;font-size:13px;}
+  .install-banner-text span{font-family:'Inter';font-weight:500;font-size:11px;opacity:0.85;}
+  .install-banner-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .install-btn{
+    background:#fff;color:var(--accent-2);border:none;border-radius:10px;
+    padding:9px 14px;font-family:'Inter';font-weight:700;font-size:12.5px;cursor:pointer;
+    white-space:nowrap;
+  }
+  .install-dismiss{font-size:20px;line-height:1;cursor:pointer;opacity:0.85;padding:2px 4px;}
+
+  /* Header */
+  header{
+    padding:22px 20px 18px;
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+    position:relative;
+  }
+  .stamp-corner{
+    position:absolute;top:14px;right:16px;
+    font-family:'Inter';font-weight:700;font-size:9.5px;letter-spacing:0.1em;
+    color:var(--accent-2);background:var(--accent-soft);
+    padding:4px 9px;border-radius:20px;text-transform:uppercase;
+  }
+  .brand-row{display:flex;align-items:center;gap:12px;position:relative;}
+  .brand-icon{
+    width:42px;height:42px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;border-radius:13px;overflow:hidden;
+  }
+  .brand-icon img{width:100%;height:100%;object-fit:contain;}
+  h1{
+    font-family:'Poppins';font-weight:700;font-size:19px;letter-spacing:-0.01em;
+    color:var(--text);
+  }
+  .tagline{
+    font-family:'Inter';font-weight:500;font-size:11.5px;color:var(--text-muted);
+    margin-top:1px;
+  }
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;
+  }
+  .stats .stat-box{
+    background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;
+    padding:9px 4px;text-align:center;
+  }
+  .stats b{
+    display:block;font-family:'Poppins';font-weight:700;font-size:16px;color:var(--accent-2);
+  }
+  .stats .stat-label{
+    display:block;font-family:'Inter';font-weight:600;font-size:9px;color:var(--text-muted);
+    text-transform:uppercase;letter-spacing:0.03em;margin-top:2px;
+  }
+
+  /* Search + filter */
+  .controls{padding:16px 20px 0;background:var(--bg);}
+  .search-box{
+    display:flex;align-items:center;gap:10px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:12px 14px;
+    box-shadow:0 1px 3px rgba(30,27,46,0.04);
+  }
+  .search-box:focus-within{border-color:var(--accent-1);}
+  .search-box input{
+    background:transparent;border:none;outline:none;color:var(--text);
+    font-family:'Inter';font-size:14.5px;flex:1;
+  }
+  .search-box input::placeholder{color:var(--text-muted);}
+  .search-box svg{flex-shrink:0;stroke:var(--text-muted);}
+
+  .tabs{
+    display:flex;gap:8px;margin-top:14px;overflow-x:auto;padding-bottom:6px;
+    scrollbar-width:none;align-items:center;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    font-family:'Inter';font-size:12.5px;font-weight:600;
+    padding:9px 15px;border-radius:12px;
+    background:var(--surface);color:var(--text-muted);
+    border:1px solid var(--border);
+    white-space:nowrap;cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+  }
+  .tab.active{
+    background:linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color:#fff;border-color:transparent;
+    box-shadow:0 2px 6px -2px rgba(67,56,202,0.28);
+  }
+  .tab-add{
+    font-family:'Inter';font-size:13px;font-weight:700;
+    padding:9px 14px;border-radius:12px;
+    background:var(--accent-soft);color:var(--accent-2);
+    border:1px dashed var(--accent-1);
+    cursor:pointer;flex-shrink:0;
+  }
+
+  /* Grid */
+  .grid{
+    padding:16px 20px;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:11px;
+  }
+  @media(min-width:520px){.grid{grid-template-columns:1fr 1fr;}}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    cursor:pointer;
+    display:flex;
+    position:relative;
+    box-shadow:0 1px 3px rgba(30,27,46,0.04);
+    transition:transform 0.12s, box-shadow 0.12s;
+  }
+  .card:active{transform:scale(0.98);}
+  .card:hover{box-shadow:0 4px 10px -6px rgba(22,24,29,0.1);}
+
+  .thumb{
+    width:60px;height:60px;flex-shrink:0;
+    background:var(--accent-soft);
+    display:flex;align-items:center;justify-content:center;
+    margin:12px 0 12px 12px;border-radius:12px;overflow:hidden;
+    color:var(--accent-2);
+  }
+  .thumb img{width:100%;height:100%;object-fit:cover;}
+  .thumb svg{opacity:0.9;}
+
+  .card-body{padding:12px 16px 12px 14px;flex:1;min-width:0;}
+  .card-name{font-family:'Inter';font-weight:700;font-size:14.5px;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card-meta{
+    display:flex;align-items:center;gap:8px;margin-top:7px;
+  }
+  .chip{
+    font-family:'Inter';font-weight:600;font-size:10px;letter-spacing:0.01em;
+    padding:3px 9px;border-radius:20px;
+    color:var(--accent-2);background:var(--accent-soft);
+  }
+  .card-date{font-family:'Inter';font-size:10.5px;color:var(--text-muted);}
+
+  .empty{
+    text-align:center;padding:60px 20px;color:var(--text-muted);
+  }
+  .empty svg{opacity:0.25;margin-bottom:14px;color:var(--accent-1);}
+  .empty p{font-family:'Poppins';font-weight:700;font-size:15px;margin-bottom:6px;color:var(--text);}
+  .empty span{font-family:'Inter';font-size:12.5px;}
+
+  /* FAB */
+  .fab{
+    position:fixed;bottom:88px;right:20px;
+    width:58px;height:58px;border-radius:50%;
+    background:linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 12px -3px rgba(67,56,202,0.35);
+    border:none;cursor:pointer;z-index:35;
+  }
+  .fab svg{stroke:#fff;}
+
+  /* Bottom nav */
+  .bottom-nav{
+    position:fixed;bottom:0;left:0;right:0;z-index:30;
+    background:var(--surface);border-top:1px solid var(--border);
+    display:flex;justify-content:space-around;align-items:center;
+    padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .nav-item{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:var(--text-muted);cursor:pointer;padding:4px 10px;border-radius:10px;
+    font-family:'Inter';font-weight:600;font-size:10px;flex:1;
+  }
+  .nav-item.active{color:var(--accent-2);}
+  .nav-item svg{width:21px;height:21px;}
+
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,18,30,0.45);
+    display:none;align-items:flex-end;justify-content:center;
+    z-index:95;
+  }
+  .overlay.open{display:flex;}
+  @media(min-width:600px){.overlay{align-items:center;}}
+
+  .sheet{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:22px 22px 0 0;
+    width:100%;max-width:480px;max-height:88vh;overflow-y:auto;
+    padding:22px 20px 28px;
+  }
+  @media(min-width:600px){.sheet{border-radius:22px;}}
+
+  .sheet-title{
+    font-family:'Poppins';font-weight:700;font-size:17px;margin-bottom:18px;
+    display:flex;justify-content:space-between;align-items:center;color:var(--text);
+  }
+  .sheet-title .close{cursor:pointer;color:var(--text-muted);font-size:22px;padding:4px;}
+
+  label{
+    display:block;font-family:'Inter';font-weight:700;font-size:11px;color:var(--text-muted);
+    margin:14px 0 6px;text-transform:uppercase;letter-spacing:0.03em;
+  }
+  input[type="text"], textarea, select{
+    width:100%;background:var(--surface-raised);
+    border:1px solid var(--border);border-radius:12px;
+    padding:12px 13px;color:var(--text);font-family:'Inter';font-size:14.5px;outline:none;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus{border-color:var(--accent-1);}
+  textarea{resize:vertical;min-height:60px;}
+
+  .cat-picker{display:flex;gap:8px;flex-wrap:wrap;}
+  .cat-opt{
+    font-family:'Inter';font-weight:600;font-size:12px;padding:9px 13px;border-radius:12px;
+    background:var(--surface-raised);border:1px solid var(--border);color:var(--text-muted);
+    cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+  }
+  .cat-opt.selected{border-color:var(--accent-1);color:var(--accent-2);background:var(--accent-soft);}
+  .cat-opt.add-new{color:var(--accent-2);border-style:dashed;border-color:var(--accent-1);}
+  .cat-del{
+    width:15px;height:15px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--danger-soft);color:var(--danger);
+    font-size:11px;line-height:1;
+  }
+  .cat-del.confirm{background:var(--danger);color:#fff;font-size:9px;}
+
+  .file-drop{
+    border:1.5px dashed var(--border-strong);border-radius:14px;
+    padding:22px;text-align:center;cursor:pointer;margin-top:6px;
+    color:var(--text-muted);font-family:'Inter';font-size:13.5px;
+  }
+  .file-drop.has-file{border-color:var(--success);color:var(--success);border-style:solid;}
+  .file-drop img{max-height:120px;border-radius:10px;margin-bottom:8px;}
+
+  .btn{
+    width:100%;padding:14px;border-radius:14px;border:none;
+    font-family:'Inter';font-weight:700;font-size:14.5px;cursor:pointer;margin-top:18px;
+  }
+  .btn-primary{background:linear-gradient(135deg, var(--accent-1), var(--accent-2));color:#fff;
+    box-shadow:0 3px 10px -3px rgba(67,56,202,0.3);}
+  .btn-danger{background:var(--danger-soft);color:var(--danger);border:none;}
+  .btn-ghost{background:var(--surface-raised);color:var(--text);border:1px solid var(--border);}
+
+  .preview-img{width:100%;border-radius:14px;margin-bottom:14px;border:1px solid var(--border);}
+  .preview-meta{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .preview-note{
+    background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;
+    padding:13px;font-size:13.5px;color:var(--text-muted);line-height:1.55;
+  }
+
+  .toast{
+    position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--text);border:none;
+    padding:11px 20px;border-radius:20px;font-family:'Inter';font-weight:600;font-size:12.5px;
+    opacity:0;transition:all 0.25s;pointer-events:none;z-index:98;color:#fff;
+    box-shadow:0 4px 12px rgba(22,24,29,0.18);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .inline-add{
+    display:flex;gap:8px;margin-top:8px;
+  }
+  .inline-add input{flex:1;}
+  .inline-add button{
+    padding:0 16px;border-radius:12px;border:none;
+    background:linear-gradient(135deg, var(--accent-1), var(--accent-2));color:#fff;font-family:'Inter';font-weight:700;font-size:12px;
+    cursor:pointer;white-space:nowrap;
+  }
+
+  .ext-badge{
+    font-family:'Inter';font-weight:700;font-size:9.5px;color:var(--accent-2);
+    letter-spacing:0.02em;margin-top:3px;
+  }
+  .trash-btn{
+    width:44px;height:44px;flex-shrink:0;border-radius:14px;
+    background:var(--surface);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    box-shadow:0 1px 3px rgba(30,27,46,0.04);
+  }
+  .trash-btn.active{border-color:var(--accent-1);background:var(--accent-soft);}
+  .trash-btn svg{stroke:var(--text-muted);}
+  .trash-btn.active svg{stroke:var(--accent-2);}
+  .search-row{display:flex;gap:8px;}
+  .days-left{
+    font-family:'Inter';font-weight:600;font-size:9.5px;color:var(--danger);
+    padding:3px 8px;background:var(--danger-soft);border-radius:20px;
+  }
+  .pin-badge{
+    position:absolute;top:8px;left:8px;z-index:2;
+    color:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.35));
+  }
+
+  /* Fullscreen viewer */
+  .fs-view{
+    position:fixed;inset:0;background:var(--bg);z-index:80;
+    display:none;flex-direction:column;
+  }
+  .fs-view.open{display:flex;}
+  .fs-topbar{
+    display:flex;align-items:center;gap:12px;
+    padding:16px 14px;border-bottom:1px solid var(--border);
+    flex-shrink:0;position:relative;background:var(--surface);
+  }
+  .fs-back{
+    width:38px;height:38px;flex-shrink:0;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    color:var(--text);background:var(--surface-raised);
+  }
+  .fs-title{
+    flex:1;font-family:'Poppins';font-weight:700;font-size:15.5px;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .fs-menu-btn{
+    width:38px;height:38px;flex-shrink:0;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    color:var(--text);background:var(--surface-raised);
+  }
+  .fs-content{
+    flex:1;overflow-y:auto;display:flex;flex-direction:column;
+    align-items:center;justify-content:flex-start;padding:18px;
+  }
+  .fs-content img{
+    max-width:100%;max-height:70vh;object-fit:contain;border-radius:14px;
+    border:1px solid var(--border);touch-action:none;user-select:none;
+  }
+  .fs-file-icon{
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    padding:60px 20px;color:var(--text-muted);
+  }
+  .fs-note{
+    width:100%;max-width:480px;margin-top:16px;
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:15px;font-size:13.5px;color:var(--text-muted);line-height:1.55;
+  }
+  .note-page{
+    width:100%;max-width:480px;
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:22px;font-family:'Inter';font-size:15px;line-height:1.75;color:var(--text);
+    white-space:pre-wrap;word-break:break-word;
+  }
+  .fs-meta{
+    display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:center;
+  }
+
+  /* Export selection */
+  .export-footer{
+    flex-shrink:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);
+    background:var(--surface);
+  }
+  .export-row{
+    display:flex;align-items:center;gap:12px;padding:11px 4px;
+    border-bottom:1px solid var(--border);cursor:pointer;
+  }
+  .export-check{
+    width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border-strong);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    font-size:13px;color:#fff;font-weight:700;
+  }
+  .export-check.checked{background:linear-gradient(135deg, var(--accent-1), var(--accent-2));border-color:transparent;}
+  .export-thumb{
+    width:42px;height:42px;border-radius:10px;overflow:hidden;flex-shrink:0;
+    background:var(--accent-soft);display:flex;align-items:center;justify-content:center;
+    color:var(--accent-2);
+  }
+  .export-cat-chips{
+    display:flex;gap:7px;flex-wrap:wrap;margin:2px 0 14px;overflow:visible;
+  }
+
+  /* Dropdown menu */
+  .menu-dropdown{
+    position:absolute;top:56px;right:14px;z-index:90;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:16px;overflow:hidden;min-width:190px;
+    box-shadow:0 12px 30px rgba(30,27,46,0.16);
+    display:none;
+  }
+  .menu-dropdown.open{display:block;}
+  .menu-item{
+    display:flex;align-items:center;gap:10px;
+    padding:13px 15px;font-family:'Inter';font-size:14px;font-weight:500;
+    color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);
+  }
+  .menu-item:last-child{border-bottom:none;}
+  .menu-item:active{background:var(--surface-raised);}
+  .menu-item.danger{color:var(--danger);}
+  .menu-item svg{flex-shrink:0;width:16px;height:16px;}
+
+  /* Settings */
+  .theme-swatch-row{display:flex;gap:12px;flex-wrap:wrap;padding:4px 0;}
+  .theme-swatch{
+    width:52px;height:52px;border-radius:16px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    border:2.5px solid transparent;position:relative;
+  }
+  .theme-swatch.active{border-color:var(--text);}
+  .theme-swatch.active::after{
+    content:"✓";color:#fff;font-weight:800;font-size:16px;
+  }
+  .settings-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:15px 4px;border-bottom:1px solid var(--border);
+  }
+  .settings-row:last-child{border-bottom:none;}
+  .settings-label{font-family:'Inter';font-weight:600;font-size:14px;color:var(--text);}
+  .settings-sub{font-family:'Inter';font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+<div class="install-banner" id="installBanner">
+  <div class="install-banner-text">
+    <b>Install Datavez</b>
+    <span>Add it to your home screen — works offline</span>
+  </div>
+  <div class="install-banner-actions">
+    <button class="install-btn" onclick="installApp()">Download App</button>
+    <span class="install-dismiss" onclick="dismissInstallBanner()">&times;</span>
+  </div>
+</div>
+
+
+<header>
+  <div class="stamp-corner">Private</div>
+  <div class="brand-row">
+    <div>
+      <h1>Datavez</h1>
+      <div class="tagline">Case File Vault</div>
+    </div>
+  </div>
+  <div class="stats" id="stats">LOADING…</div>
+</header>
+
+<div class="controls">
+  <div class="search-row">
+    <div class="search-box" style="flex:1">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="searchInput" type="text" placeholder="Search records...">
+    </div>
+  </div>
+  <input type="file" id="importFileInput" accept=".zip,.json,application/zip,application/json" style="display:none">
+  <div class="tabs" id="tabs"></div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<button class="fab" id="fab" onclick="openAddModal()">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<div class="bottom-nav">
+  <div class="nav-item active" id="navHome" onclick="setView('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+    <span>Home</span>
+  </div>
+  <div class="nav-item" id="navNotes" onclick="setView('notes')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+    <span>Notes</span>
+  </div>
+  <div class="nav-item" id="navTrash" onclick="setView('trash')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+    <span>Trash</span>
+  </div>
+  <div class="nav-item" id="navSettings" onclick="openSettingsView()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Settings</span>
+  </div>
+</div>
+
+<!-- Settings view -->
+<div class="fs-view" id="settingsView">
+  <div class="fs-topbar">
+    <div class="fs-back" onclick="closeSettingsView()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </div>
+    <div class="fs-title">Settings</div>
+    <div style="width:38px"></div>
+  </div>
+  <div class="fs-content" id="settingsContent" style="align-items:stretch;padding:20px;"></div>
+</div>
+
+
+<!-- Add Modal -->
+<div class="overlay" id="addOverlay">
+  <div class="sheet">
+    <div class="sheet-title"><span>New Record</span><span class="close" onclick="closeAddModal()">&times;</span></div>
+
+    <label>Document name</label>
+    <input type="text" id="docName" placeholder="e.g. Aadhar Card">
+
+    <label>Category</label>
+    <div class="cat-picker" id="catPicker"></div>
+    <div class="inline-add" id="inlineAddCat" style="display:none">
+      <input type="text" id="newCatName" placeholder="Category name">
+      <button onclick="confirmNewCategory()">Add</button>
+    </div>
+
+    <div id="modeToggleRow">
+      <label>Type</label>
+      <div class="cat-picker">
+        <div class="cat-opt" id="modeFileBtn" onclick="setAddMode('file')">File</div>
+        <div class="cat-opt" id="modeNoteBtn" onclick="setAddMode('note')">Note</div>
+      </div>
+    </div>
+
+    <div id="fileSection">
+      <label>File</label>
+      <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()">
+        <span id="fileDropText">Tap to select any file — photo, PDF, ZIP, HTML, etc.</span>
+      </div>
+      <input type="file" id="fileInput" style="display:none">
+    </div>
+
+    <label id="noteLabel">Note (optional)</label>
+    <textarea id="docNote" placeholder="e.g. Number, expiry date, remarks..."></textarea>
+
+    <button class="btn btn-primary" id="saveBtn" onclick="saveDocument()">File this record</button>
+  </div>
+</div>
+
+<!-- View Modal -->
+<div class="overlay" id="viewOverlay">
+  <div class="sheet" id="viewSheet"></div>
+</div>
+
+<!-- Fullscreen viewer -->
+<div class="fs-view" id="fsView">
+  <div class="fs-topbar">
+    <div class="fs-back" onclick="closeFullscreen()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </div>
+    <div class="fs-title" id="fsTitle">Document</div>
+    <div class="fs-menu-btn" onclick="toggleMenu(event)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+    </div>
+    <div class="menu-dropdown" id="menuDropdown"></div>
+  </div>
+  <div class="fs-content" id="fsContent"></div>
+</div>
+
+<!-- Export selection view -->
+<div class="fs-view" id="exportView">
+  <div class="fs-topbar">
+    <div class="fs-back" onclick="closeExportView()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </div>
+    <div class="fs-title">Select records to export</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="fs-content" id="exportContent" style="align-items:stretch;padding:14px 16px;"></div>
+  <div class="export-footer">
+    <button class="btn btn-primary" style="margin-top:0" onclick="performExport()">Export &amp; share (<span id="selCount">0</span>)</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEFAULT_CATEGORIES = [
+  {id:'identity', label:'Identity'},
+  {id:'education', label:'Education'},
+  {id:'financial', label:'Financial'},
+  {id:'other', label:'Other'}
+];
+let categories = [];
+let docs = [];
+let activeCategory = 'all';
+let searchTerm = '';
+let pendingFile = null;
+let pendingFileName = '';
+let pendingFileType = '';
+let selectedCat = 'identity';
+let addMode = 'file';
+let trashMode = false;
+let currentView = 'home'; // 'home' | 'notes' | 'trash'
+const TRASH_DAYS = 30;
+const TRASH_MS = TRASH_DAYS * 24 * 60 * 60 * 1000;
+
+function catLabel(id){ const c = categories.find(x=>x.id===id); return c ? c.label : 'Other'; }
+
+function getExt(name){
+  const m = (name||'').match(/\.([a-zA-Z0-9]+)$/);
+  return m ? m[1].toUpperCase() : 'FILE';
+}
+function isImageType(type){ return (type||'').startsWith('image/'); }
+
+// --- IndexedDB storage (much higher capacity than localStorage, avoids silent save failures) ---
+const DB_NAME = 'datavez-db';
+const DB_VERSION = 2;
+let dbPromise = null;
+
+function openDB(){
+  if(dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e)=>{
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains('documents')) db.createObjectStore('documents', {keyPath:'id'});
+      if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', {keyPath:'key'});
+      if(!db.objectStoreNames.contains('shareQueue')) db.createObjectStore('shareQueue', {keyPath:'id'});
+    };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+  return dbPromise;
+}
+async function idbGetAllDocs(){
+  const db = await openDB();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction('documents','readonly');
+    const req = tx.objectStore('documents').getAll();
+    req.onsuccess = ()=> resolve(req.result || []);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function idbGetMeta(key){
+  const db = await openDB();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction('meta','readonly');
+    const req = tx.objectStore('meta').get(key);
+    req.onsuccess = ()=> resolve(req.result ? req.result.value : null);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function idbSetMeta(key, value){
+  const db = await openDB();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction('meta','readwrite');
+    tx.objectStore('meta').put({key, value});
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+
+async function loadAll(){
+  try{
+    docs = await idbGetAllDocs();
+  }catch(e){ docs = []; }
+
+  try{
+    const cats = await idbGetMeta('categories');
+    categories = (cats && cats.length) ? cats : DEFAULT_CATEGORIES.slice();
+  }catch(e){ categories = DEFAULT_CATEGORIES.slice(); }
+
+  // one-time migration from the old localStorage version, so existing saved documents aren't lost
+  try{
+    if(docs.length === 0){
+      const legacyDocsRaw = localStorage.getItem('datavez:documents');
+      if(legacyDocsRaw){
+        const legacyDocs = JSON.parse(legacyDocsRaw);
+        if(Array.isArray(legacyDocs) && legacyDocs.length){
+          docs = legacyDocs;
+          await persistDocs();
+          localStorage.removeItem('datavez:documents');
+          showToast('Restored ' + legacyDocs.length + ' record(s) from backup');
+        }
+      }
+    }
+    const legacyCatsRaw = localStorage.getItem('datavez:categories');
+    if(legacyCatsRaw && (!categories || categories.length === 0)){
+      const legacyCats = JSON.parse(legacyCatsRaw);
+      if(Array.isArray(legacyCats) && legacyCats.length){
+        categories = legacyCats;
+        await persistCategories();
+      }
+      localStorage.removeItem('datavez:categories');
+    }
+  }catch(e){}
+
+  // auto-purge trash older than 30 days
+  const before = docs.length;
+  docs = docs.filter(d => {
+    if(d.status === 'trash' && d.trashedAt && (Date.now() - d.trashedAt) > TRASH_MS) return false;
+    return true;
+  });
+  if(docs.length !== before) await persistDocs();
+
+  render();
+}
+
+async function persistDocs(){
+  try{
+    const db = await openDB();
+    await new Promise((resolve, reject)=>{
+      const tx = db.transaction('documents','readwrite');
+      const store = tx.objectStore('documents');
+      store.clear();
+      docs.forEach(d => store.put(d));
+      tx.oncomplete = ()=> resolve();
+      tx.onerror = ()=> reject(tx.error);
+    });
+  }catch(e){
+    showToast('Save failed — storage error');
+  }
+}
+async function persistCategories(){
+  try{ await idbSetMeta('categories', categories); }
+  catch(e){ showToast('Save failed'); }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function renderTabs(){
+  const tabs = document.getElementById('tabs');
+  if(currentView === 'trash'){
+    tabs.innerHTML = `<div class="tab active" style="background:var(--danger);color:#fff">Auto-deletes after 30 days</div>`;
+    return;
+  }
+  if(currentView === 'notes'){
+    tabs.innerHTML = `<div class="tab active">Your notes</div>`;
+    return;
+  }
+  const all = [{id:'all', label:'All'}, ...categories];
+  tabs.innerHTML = all.map(c => `<div class="tab ${activeCategory===c.id?'active':''}" onclick="setCategory('${c.id}')">${escapeHtml(c.label)}</div>`).join('');
+}
+function setCategory(id){ activeCategory = id; render(); }
+
+function renderStats(){
+  const el = document.getElementById('stats');
+  const activeCount = docs.filter(d=>d.status!=='trash').length;
+  const trashCount = docs.filter(d=>d.status==='trash').length;
+  const pinnedCount = docs.filter(d=>d.status!=='trash' && d.pinned).length;
+  el.innerHTML = `
+    <div class="stat-box"><b>${activeCount}</b><span class="stat-label">On file</span></div>
+    <div class="stat-box"><b>${categories.length}</b><span class="stat-label">Categories</span></div>
+    <div class="stat-box"><b>${trashCount}</b><span class="stat-label">Trash</span></div>
+    <div class="stat-box"><b>${pinnedCount}</b><span class="stat-label">Pinned</span></div>
+  `;
+}
+
+function svgDoc(){
+  return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>`;
+}
+function svgNote(){
+  return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>`;
+}
+
+function setView(view){
+  currentView = view;
+  trashMode = (view === 'trash');
+  activeCategory = 'all';
+  document.getElementById('navHome').classList.toggle('active', view==='home');
+  document.getElementById('navNotes').classList.toggle('active', view==='notes');
+  document.getElementById('navTrash').classList.toggle('active', view==='trash');
+  document.getElementById('fab').style.display = (view==='trash') ? 'none' : 'flex';
+  render();
+}
+
+function render(){
+  renderTabs();
+  renderStats();
+  const grid = document.getElementById('grid');
+
+  let filtered;
+  if(currentView === 'trash'){
+    filtered = docs.filter(d => d.status === 'trash');
+  }else if(currentView === 'notes'){
+    filtered = docs.filter(d => d.status !== 'trash' && d.type === 'note');
+  }else{
+    filtered = docs.filter(d => d.status !== 'trash' && (activeCategory==='all' || d.category===activeCategory));
+  }
+  if(searchTerm.trim()){
+    const s = searchTerm.toLowerCase();
+    filtered = filtered.filter(d => d.name.toLowerCase().includes(s) || (d.type==='note' && (d.content||'').toLowerCase().includes(s)));
+  }
+  filtered.sort((a,b)=> {
+    if(currentView === 'trash') return b.trashedAt - a.trashedAt;
+    const pinDiff = (b.pinned?1:0) - (a.pinned?1:0);
+    if(pinDiff !== 0) return pinDiff;
+    return b.createdAt - a.createdAt;
+  });
+
+  if(filtered.length === 0){
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      ${svgDoc().replace('width="24" height="24"','width="40" height="40"')}
+      <p>${trashMode ? 'Trash is empty' : (docs.filter(d=>d.status!=='trash').length===0 ? 'No records on file' : 'No matches')}</p>
+      <span>${trashMode ? 'Deleted records appear here for 30 days' : (docs.length===0 ? 'Tap + to file your first document' : 'Try a different search or category')}</span>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(d => {
+    const isImg = d.type!=='note' && (isImageType(d.fileType) || (!d.fileType && d.image));
+    const daysLeft = trashMode ? Math.max(0, TRASH_DAYS - Math.floor((Date.now()-d.trashedAt)/(24*60*60*1000))) : null;
+    let thumbInner;
+    if(d.type === 'note'){
+      thumbInner = `<div style="display:flex;flex-direction:column;align-items:center;">${svgNote()}<span class="ext-badge">NOTE</span></div>`;
+    }else if(isImg){
+      thumbInner = `<img src="${d.image}">`;
+    }else{
+      thumbInner = `<div style="display:flex;flex-direction:column;align-items:center;">${svgDoc()}<span class="ext-badge">${getExt(d.fileName||d.name)}</span></div>`;
+    }
+    return `
+    <div class="card" onclick="openView('${d.id}')">
+      ${(!trashMode && d.pinned) ? `<div class="pin-badge"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L9 9l-7 1 5 5-1 7 6-4 6 4-1-7 5-5-7-1z"/></svg></div>` : ''}
+      <div class="thumb">${thumbInner}</div>
+      <div class="card-body">
+        <div class="card-name">${escapeHtml(d.name)}</div>
+        <div class="card-meta">
+          <span class="chip">${escapeHtml(catLabel(d.category))}</span>
+          ${trashMode ? `<span class="days-left">${daysLeft}d left</span>` : ''}
+        </div>
+        <div class="card-date" style="margin-top:7px">${new Date(trashMode ? d.trashedAt : d.createdAt).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</div>
+      </div>
+    </div>
+  `;}).join('');
+}
+
+function escapeHtml(s){
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+document.getElementById('searchInput').addEventListener('input', e=>{
+  searchTerm = e.target.value;
+  render();
+});
+
+// Add modal
+function openAddModal(){
+  document.getElementById('docName').value = '';
+  document.getElementById('docNote').value = '';
+  pendingFile = null;
+  pendingFileName = '';
+  pendingFileType = '';
+  document.getElementById('fileDrop').classList.remove('has-file');
+  document.getElementById('fileDrop').innerHTML = '<span id="fileDropText">Tap to select any file — photo, PDF, ZIP, HTML, etc.</span>';
+  document.getElementById('inlineAddCat').style.display = 'none';
+  document.getElementById('newCatName').value = '';
+  renderCatPicker(categories[0] ? categories[0].id : 'other');
+
+  const mode = (currentView === 'notes') ? 'note' : 'file';
+  setAddMode(mode);
+  document.getElementById('modeToggleRow').style.display = 'none';
+  document.getElementById('addOverlay').classList.add('open');
+}
+function closeAddModal(){
+  document.getElementById('addOverlay').classList.remove('open');
+}
+function setAddMode(mode){
+  addMode = mode;
+  document.getElementById('modeFileBtn').classList.toggle('selected', mode==='file');
+  document.getElementById('modeNoteBtn').classList.toggle('selected', mode==='note');
+  document.getElementById('fileSection').style.display = mode==='file' ? 'block' : 'none';
+  const noteLabel = document.getElementById('noteLabel');
+  const noteArea = document.getElementById('docNote');
+  const saveBtn = document.getElementById('saveBtn');
+  if(mode==='note'){
+    noteLabel.textContent = 'Note content';
+    noteArea.placeholder = 'Likh de — bill items, shopping list, prices, remarks...';
+    noteArea.style.minHeight = '170px';
+    saveBtn.textContent = 'Save note';
+  }else{
+    noteLabel.textContent = 'Note (optional)';
+    noteArea.placeholder = 'e.g. Number, expiry date, remarks...';
+    noteArea.style.minHeight = '60px';
+    saveBtn.textContent = 'File this record';
+  }
+}
+let deleteConfirmCatId = null;
+
+function renderCatPicker(sel){
+  selectedCat = sel;
+  const picker = document.getElementById('catPicker');
+  picker.innerHTML = categories.map(c => {
+    const isDefault = DEFAULT_CATEGORIES.some(dc => dc.id === c.id);
+    const confirming = deleteConfirmCatId === c.id;
+    const delBtn = isDefault ? '' : `<span class="cat-del ${confirming?'confirm':''}" onclick="event.stopPropagation();handleDeleteCategory('${c.id}')">${confirming ? '✓' : '×'}</span>`;
+    return `<div class="cat-opt ${c.id===sel?'selected':''}" onclick="renderCatPicker('${c.id}')">${escapeHtml(c.label)}${delBtn}</div>`;
+  }).join('') + `<div class="cat-opt add-new" onclick="showInlineAddCat()">+ New</div>`;
+}
+function showInlineAddCat(){
+  document.getElementById('inlineAddCat').style.display = 'flex';
+  document.getElementById('newCatName').focus();
+}
+async function confirmNewCategory(){
+  const name = document.getElementById('newCatName').value.trim();
+  if(!name){ showToast('Enter a category name'); return; }
+  const id = 'cat_' + name.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') + '_' + Date.now().toString(36).slice(-4);
+  categories.push({id, label:name});
+  await persistCategories();
+  document.getElementById('newCatName').value = '';
+  document.getElementById('inlineAddCat').style.display = 'none';
+  renderCatPicker(id);
+  showToast('Category added ✓');
+}
+async function handleDeleteCategory(id){
+  if(deleteConfirmCatId === id){
+    categories = categories.filter(c => c.id !== id);
+    await persistCategories();
+    let reassigned = false;
+    docs.forEach(d => { if(d.category === id){ d.category = 'other'; reassigned = true; } });
+    if(reassigned) await persistDocs();
+    deleteConfirmCatId = null;
+    const fallback = categories[0] ? categories[0].id : 'other';
+    renderCatPicker(selectedCat === id ? fallback : selectedCat);
+    if(activeCategory === id){ activeCategory = 'all'; render(); }
+    showToast('Category deleted');
+  }else{
+    deleteConfirmCatId = id;
+    renderCatPicker(selectedCat);
+    setTimeout(()=>{
+      if(deleteConfirmCatId === id){ deleteConfirmCatId = null; renderCatPicker(selectedCat); }
+    }, 2500);
+  }
+}
+
+document.getElementById('fileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    pendingFile = ev.target.result;
+    pendingFileName = file.name;
+    pendingFileType = file.type || '';
+    const drop = document.getElementById('fileDrop');
+    drop.classList.add('has-file');
+    if(isImageType(pendingFileType)){
+      drop.innerHTML = `<img src="${pendingFile}"><div>Tap to change file</div>`;
+    }else{
+      drop.innerHTML = `<div style="padding:8px 0">${svgDoc()}<div style="margin-top:6px">${escapeHtml(file.name)}</div><div style="margin-top:4px;font-size:11px">Tap to change file</div></div>`;
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+async function saveDocument(){
+  const name = document.getElementById('docName').value.trim();
+  if(!name){ showToast('Enter a document name'); return; }
+
+  if(addMode === 'note'){
+    const content = document.getElementById('docNote').value.trim();
+    if(!content){ showToast('Write something in the note'); return; }
+    const doc = {
+      id: 'doc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      name,
+      category: selectedCat,
+      type: 'note',
+      content,
+      status: 'active',
+      createdAt: Date.now()
+    };
+    docs.push(doc);
+    await persistDocs();
+    closeAddModal();
+    render();
+    showToast('Note saved ✓');
+    return;
+  }
+
+  if(!pendingFile){ showToast('Select a file first'); return; }
+
+  const doc = {
+    id: 'doc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    name,
+    category: selectedCat,
+    type: 'file',
+    note: document.getElementById('docNote').value.trim(),
+    image: pendingFile,
+    fileName: pendingFileName,
+    fileType: pendingFileType,
+    status: 'active',
+    createdAt: Date.now()
+  };
+  docs.push(doc);
+  await persistDocs();
+  closeAddModal();
+  render();
+  showToast('Filed ✓');
+}
+
+// Fullscreen viewer
+function svgIcon(name){
+  const icons = {
+    pin: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L9 9l-7 1 5 5-1 7 6-4 6 4-1-7 5-5-7-1z"/></svg>`,
+    unpin: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L9 9l-7 1 5 5-1 7 6-4 6 4-1-7 5-5-7-1z"/></svg>`,
+    rename: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>`,
+    share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>`,
+    download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>`,
+    duplicate: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+    trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>`,
+    restore: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>`,
+    edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
+  };
+  return icons[name] || '';
+}
+
+let currentViewId = null;
+let currentBlobUrl = null;
+
+function openView(id){
+  currentViewId = id;
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  const isImg = d.type!=='note' && (isImageType(d.fileType) || (!d.fileType && d.image));
+  const isPdf = d.type!=='note' && !isImg && (d.fileType === 'application/pdf' || getExt(d.fileName||d.name) === 'PDF');
+
+  if(currentBlobUrl){ URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; }
+
+  document.getElementById('fsTitle').textContent = d.name;
+
+  const content = document.getElementById('fsContent');
+  let previewBlock;
+  if(d.type === 'note'){
+    previewBlock = `<div class="note-page">${escapeHtml(d.content||'').replace(/\n/g,'<br>')}</div>`;
+  }else if(isImg){
+    previewBlock = `<img src="${d.image}">`;
+  }else if(isPdf){
+    const blobUrl = URL.createObjectURL(dataURLtoFile(d.image, d.fileName || (d.name+'.pdf')));
+    currentBlobUrl = blobUrl;
+    previewBlock = `
+      <embed src="${blobUrl}" type="application/pdf" style="width:100%;height:65vh;border-radius:6px;border:1px solid var(--border);background:#fff">
+      <button class="btn btn-ghost" style="max-width:480px" onclick="window.open('${blobUrl}','_blank')">Open full screen</button>
+    `;
+  }else{
+    const blobUrl = URL.createObjectURL(dataURLtoFile(d.image, d.fileName || d.name));
+    currentBlobUrl = blobUrl;
+    previewBlock = `<div class="fs-file-icon">${svgDoc().replace('width="24" height="24"','width="52" height="52"')}<div style="font-family:'Courier Prime';font-weight:700;color:var(--text)">${escapeHtml(d.fileName || d.name)}</div><div style="font-size:11px">${getExt(d.fileName||d.name)} file</div></div>
+      <button class="btn btn-ghost" style="max-width:480px" onclick="window.open('${blobUrl}','_blank')">Try opening this file</button>`;
+  }
+
+  const daysLeft = d.status==='trash' ? Math.max(0, TRASH_DAYS - Math.floor((Date.now()-d.trashedAt)/(24*60*60*1000))) : null;
+
+  content.innerHTML = `
+    ${previewBlock}
+    ${d.status==='trash' ? `<div class="fs-meta"><span class="days-left">${daysLeft}d left</span></div>` : ''}
+    ${(d.type!=='note' && d.note) ? `<div class="fs-note">${escapeHtml(d.note)}</div>` : ''}
+  `;
+
+  buildMenu(d);
+  document.getElementById('fsView').classList.add('open');
+
+  if(isImg){
+    const imgEl = content.querySelector('img');
+    if(imgEl) setupImageZoom(imgEl);
+  }
+}
+
+function setupImageZoom(img){
+  let scale = 1, panX = 0, panY = 0;
+  let startDist = 0, startScale = 1;
+  let isPanning = false, startPanX = 0, startPanY = 0;
+  let isPinching = false;
+  let lastTap = 0;
+  let gestureMoved = false;
+
+  function apply(animated){
+    img.style.transition = animated ? 'transform 0.18s ease-out' : 'none';
+    img.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+  }
+  function dist(t1, t2){
+    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  }
+  function clampPan(){
+    // keep image roughly within view bounds when zoomed
+    const maxPan = (scale - 1) * 140;
+    panX = Math.max(-maxPan, Math.min(maxPan, panX));
+    panY = Math.max(-maxPan, Math.min(maxPan, panY));
+  }
+  function reset(animated){
+    scale = 1; panX = 0; panY = 0; apply(animated);
+  }
+
+  img.addEventListener('touchstart', (e)=>{
+    gestureMoved = false;
+    if(e.touches.length === 2){
+      isPinching = true;
+      isPanning = false;
+      startDist = dist(e.touches[0], e.touches[1]);
+      startScale = scale;
+    }else if(e.touches.length === 1 && scale > 1){
+      isPanning = true;
+      startPanX = e.touches[0].clientX - panX;
+      startPanY = e.touches[0].clientY - panY;
+    }
+  }, {passive:true});
+
+  img.addEventListener('touchmove', (e)=>{
+    if(e.touches.length === 2){
+      e.preventDefault();
+      gestureMoved = true;
+      const newDist = dist(e.touches[0], e.touches[1]);
+      scale = Math.min(4, Math.max(1, startScale * (newDist / startDist)));
+      clampPan();
+      apply(false);
+    }else if(e.touches.length === 1 && isPanning){
+      e.preventDefault();
+      gestureMoved = true;
+      panX = e.touches[0].clientX - startPanX;
+      panY = e.touches[0].clientY - startPanY;
+      clampPan();
+      apply(false);
+    }
+  }, {passive:false});
+
+  img.addEventListener('touchend', (e)=>{
+    const wasPinching = isPinching;
+    if(e.touches.length === 0){
+      isPanning = false;
+      isPinching = false;
+    }else if(e.touches.length === 1){
+      // one finger lifted off a pinch — resume single-finger pan from current position
+      isPinching = false;
+      isPanning = scale > 1;
+      startPanX = e.touches[0].clientX - panX;
+      startPanY = e.touches[0].clientY - panY;
+    }
+
+    if(e.touches.length > 0) return;
+
+    // settle: never snap back below the user's chosen zoom level
+    if(scale <= 1){ reset(true); }
+    else{ apply(true); }
+
+    // double-tap only counts as a real tap (no pinch/drag involved)
+    if(!wasPinching && !gestureMoved){
+      const now = Date.now();
+      if(now - lastTap < 300){
+        if(scale > 1){ reset(true); }
+        else{ scale = 2.2; apply(true); }
+      }
+      lastTap = now;
+    }
+  });
+}
+
+function buildMenu(d){
+  const menu = document.getElementById('menuDropdown');
+  let items;
+  if(d.status === 'trash'){
+    items = [
+      {icon:'restore', label:'Restore', action:`restoreDoc('${d.id}')`},
+      {icon:'trash', label:'Delete forever', action:`permanentDelete('${d.id}')`, danger:true},
+    ];
+  }else{
+    items = [
+      {icon: d.pinned ? 'unpin' : 'pin', label: d.pinned ? 'Unpin' : 'Pin to top', action:`togglePin('${d.id}')`},
+      {icon:'rename', label:'Rename', action:`renameDoc('${d.id}')`},
+    ];
+    if(d.type === 'note'){
+      items.push({icon:'edit', label:'Edit note', action:`editNoteContent('${d.id}')`});
+    }
+    items.push(
+      {icon:'share', label:'Share', action:`shareDoc('${d.id}')`},
+      {icon:'download', label: d.type==='note' ? 'Download as .txt' : 'Download', action:`downloadDoc('${d.id}')`},
+      {icon:'trash', label:'Move to trash', action:`deleteDoc('${d.id}')`, danger:true}
+    );
+  }
+  menu.innerHTML = items.map(it => `<div class="menu-item ${it.danger?'danger':''}" onclick="${it.action}">${svgIcon(it.icon)}<span>${it.label}</span></div>`).join('');
+}
+
+function toggleMenu(e){
+  e.stopPropagation();
+  document.getElementById('menuDropdown').classList.toggle('open');
+}
+document.addEventListener('click', (e)=>{
+  const menu = document.getElementById('menuDropdown');
+  if(menu.classList.contains('open') && !menu.contains(e.target)){
+    menu.classList.remove('open');
+  }
+});
+
+function closeFullscreen(){
+  document.getElementById('fsView').classList.remove('open');
+  document.getElementById('menuDropdown').classList.remove('open');
+  if(currentBlobUrl){ URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; }
+  currentViewId = null;
+  render();
+}
+
+function closeMenuAnd(fn){
+  document.getElementById('menuDropdown').classList.remove('open');
+  fn();
+}
+
+async function togglePin(id){
+  document.getElementById('menuDropdown').classList.remove('open');
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  d.pinned = !d.pinned;
+  await persistDocs();
+  buildMenu(d);
+  showToast(d.pinned ? 'Pinned to top' : 'Unpinned');
+}
+
+function renameDoc(id){
+  document.getElementById('menuDropdown').classList.remove('open');
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  const sheet = document.getElementById('viewSheet');
+  sheet.innerHTML = `
+    <div class="sheet-title"><span>Rename record</span><span class="close" onclick="closeView()">&times;</span></div>
+    <label>New name</label>
+    <input type="text" id="renameInput" value="${escapeHtml(d.name)}">
+    <button class="btn btn-primary" onclick="confirmRename('${d.id}')">Save</button>
+  `;
+  document.getElementById('viewOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('renameInput').focus(), 100);
+}
+async function confirmRename(id){
+  const val = document.getElementById('renameInput').value.trim();
+  if(!val){ showToast('Name cannot be empty'); return; }
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  d.name = val;
+  await persistDocs();
+  closeView();
+  document.getElementById('fsTitle').textContent = val;
+  render();
+  showToast('Renamed ✓');
+}
+
+function editNoteContent(id){
+  document.getElementById('menuDropdown').classList.remove('open');
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  const sheet = document.getElementById('viewSheet');
+  sheet.innerHTML = `
+    <div class="sheet-title"><span>Edit note</span><span class="close" onclick="closeView()">&times;</span></div>
+    <label>Content</label>
+    <textarea id="editNoteInput" style="min-height:170px">${escapeHtml(d.content||'')}</textarea>
+    <button class="btn btn-primary" onclick="confirmEditNote('${d.id}')">Save</button>
+  `;
+  document.getElementById('viewOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('editNoteInput').focus(), 100);
+}
+async function confirmEditNote(id){
+  const val = document.getElementById('editNoteInput').value.trim();
+  if(!val){ showToast('Note cannot be empty'); return; }
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  d.content = val;
+  await persistDocs();
+  closeView();
+  openView(id);
+  showToast('Note updated ✓');
+}
+
+function dataURLtoFile(dataurl, filename){
+  const arr = dataurl.split(',');
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+  return new File([u8arr], filename, {type: mime});
+}
+
+async function shareDoc(id){
+  document.getElementById('menuDropdown').classList.remove('open');
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+
+  if(d.type === 'note'){
+    try{
+      if(navigator.share){
+        await navigator.share({title: d.name, text: d.content || ''});
+      }else if(navigator.clipboard){
+        await navigator.clipboard.writeText(d.content || '');
+        showToast('Copied to clipboard');
+      }else{
+        showToast('Sharing not supported on this device');
+      }
+    }catch(e){
+      if(e.name !== 'AbortError'){ showToast('Share failed'); }
+    }
+    return;
+  }
+
+  const filename = d.fileName || (d.name.replace(/\s+/g,'_') + (isImageType(d.fileType) ? '.jpg' : ''));
+  try{
+    const file = dataURLtoFile(d.image, filename);
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title: d.name});
+    }else{
+      showToast('Sharing not supported — downloading instead');
+      downloadDoc(id);
+    }
+  }catch(e){
+    if(e.name !== 'AbortError'){
+      showToast('Share failed — try download');
+    }
+  }
+}
+
+async function duplicateDoc(id){
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  const copy = {...d, id: 'doc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7), name: d.name + ' (copy)', createdAt: Date.now(), pinned:false};
+  docs.push(copy);
+  await persistDocs();
+  render();
+  showToast('Duplicated ✓');
+}
+
+function closeView(){
+  document.getElementById('viewOverlay').classList.remove('open');
+}
+
+// --- Backup & Restore ---
+function openBackupSheet(){
+  const sheet = document.getElementById('viewSheet');
+  const activeCount = docs.filter(d=>d.status!=='trash').length;
+  sheet.innerHTML = `
+    <div class="sheet-title"><span>Backup &amp; Restore</span><span class="close" onclick="closeView()">&times;</span></div>
+    <div class="preview-note" style="margin-bottom:16px">Export lets you pick which of your ${activeCount} record(s) to include, packed as their original files in a .zip — share it on WhatsApp, Drive, anywhere. Import adds records from a backup .zip into a category you choose.</div>
+    <button class="btn btn-primary" onclick="closeView();openExportView()">Select records to export</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('importFileInput').click()">Import backup</button>
+  `;
+  document.getElementById('viewOverlay').classList.add('open');
+}
+
+// ---- Selective export ----
+let selectedExportIds = new Set();
+let exportSearchTerm = '';
+
+function openExportView(){
+  selectedExportIds = new Set(docs.filter(d=>d.status!=='trash').map(d=>d.id));
+  exportSearchTerm = '';
+  document.getElementById('exportView').classList.add('open');
+  renderExportList();
+}
+function closeExportView(){
+  document.getElementById('exportView').classList.remove('open');
+}
+function onExportSearch(val){
+  exportSearchTerm = val;
+  renderExportList();
+}
+function renderExportList(){
+  const activeDocs = docs.filter(d=>d.status!=='trash');
+  let list = activeDocs;
+  if(exportSearchTerm.trim()){
+    const s = exportSearchTerm.toLowerCase();
+    list = list.filter(d => d.name.toLowerCase().includes(s));
+  }
+  const allSelected = activeDocs.length>0 && activeDocs.every(d=>selectedExportIds.has(d.id));
+
+  const catChips = categories.map(c=>{
+    const catDocs = activeDocs.filter(d=>d.category===c.id);
+    if(catDocs.length===0) return '';
+    const catAllSelected = catDocs.every(d=>selectedExportIds.has(d.id));
+    return `<div class="tab ${catAllSelected?'active':''}" onclick="toggleCategorySelect('${c.id}')">${escapeHtml(c.label)} (${catDocs.length})</div>`;
+  }).join('');
+
+  const rows = list.map(d=>{
+    const checked = selectedExportIds.has(d.id);
+    const isImg = d.type!=='note' && (isImageType(d.fileType) || (!d.fileType && d.image));
+    let iconInner;
+    if(d.type === 'note'){ iconInner = svgNote(); }
+    else if(isImg){ iconInner = `<img src="${d.image}" style="width:100%;height:100%;object-fit:cover;">`; }
+    else{ iconInner = svgDoc(); }
+    return `
+      <div class="export-row" onclick="toggleExportSelect('${d.id}')">
+        <div class="export-check ${checked?'checked':''}">${checked ? '✓' : ''}</div>
+        <div class="export-thumb">${iconInner}</div>
+        <div style="flex:1;min-width:0">
+          <div class="card-name" style="font-size:14px">${escapeHtml(d.name)}</div>
+          <div class="card-date" style="margin-top:3px">${escapeHtml(catLabel(d.category))}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('exportContent').innerHTML = `
+    <div class="search-box" style="margin-bottom:12px;width:100%">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search records..." value="${escapeHtml(exportSearchTerm)}" oninput="onExportSearch(this.value)">
+    </div>
+    <div class="cat-opt ${allSelected?'selected':''}" style="width:100%;justify-content:center;margin-bottom:10px" onclick="toggleSelectAll()">${allSelected ? '☑' : '☐'}&nbsp; Select all (${activeDocs.length})</div>
+    ${catChips ? `<div class="export-cat-chips">${catChips}</div>` : ''}
+    <div style="width:100%">${rows || '<div class="empty" style="padding:30px 10px">No records match</div>'}</div>
+  `;
+  document.getElementById('selCount').textContent = selectedExportIds.size;
+}
+function toggleExportSelect(id){
+  if(selectedExportIds.has(id)) selectedExportIds.delete(id);
+  else selectedExportIds.add(id);
+  renderExportList();
+}
+function toggleSelectAll(){
+  const activeDocs = docs.filter(d=>d.status!=='trash');
+  const allSelected = activeDocs.length>0 && activeDocs.every(d=>selectedExportIds.has(d.id));
+  selectedExportIds = allSelected ? new Set() : new Set(activeDocs.map(d=>d.id));
+  renderExportList();
+}
+function toggleCategorySelect(catId){
+  const catDocs = docs.filter(d=>d.status!=='trash' && d.category===catId);
+  const allSel = catDocs.every(d=>selectedExportIds.has(d.id));
+  catDocs.forEach(d=>{
+    if(allSel) selectedExportIds.delete(d.id);
+    else selectedExportIds.add(d.id);
+  });
+  renderExportList();
+}
+
+function safeFileBase(name){
+  return (name||'record').replace(/[\\/:*?"<>|]+/g,'_').trim() || 'record';
+}
+function uniqueZipName(usedNames, base, ext){
+  let name = base + ext, i = 1;
+  while(usedNames.has(name)){ name = base + '_' + i + ext; i++; }
+  usedNames.add(name);
+  return name;
+}
+
+async function performExport(){
+  if(selectedExportIds.size === 0){ showToast('Select at least one record'); return; }
+  showToast('Preparing export…');
+
+  const zip = new JSZip();
+  const manifestEntries = [];
+  const usedNames = new Set();
+  const selectedDocs = docs.filter(d=>selectedExportIds.has(d.id));
+
+  for(const d of selectedDocs){
+    const base = safeFileBase(d.name);
+    if(d.type === 'note'){
+      const filename = uniqueZipName(usedNames, base, '.txt');
+      zip.file(filename, d.content || '');
+      manifestEntries.push({filename, name:d.name, type:'note', note:d.note||'', createdAt:d.createdAt});
+    }else{
+      const ext = (d.fileName && d.fileName.includes('.')) ? d.fileName.slice(d.fileName.lastIndexOf('.')) : (isImageType(d.fileType) ? '.jpg' : '');
+      const filename = uniqueZipName(usedNames, base, ext);
+      const base64 = (d.image || '').split(',')[1] || '';
+      zip.file(filename, base64, {base64:true});
+      manifestEntries.push({filename, name:d.name, type:'file', note:d.note||'', createdAt:d.createdAt});
+    }
+  }
+  zip.file('manifest.json', JSON.stringify({app:'Datavez', exportedAt:Date.now(), entries:manifestEntries}));
+
+  const blob = await zip.generateAsync({type:'blob'});
+
+  const selectedCatIds = new Set(selectedDocs.map(d=>d.category));
+  let zipName;
+  if(selectedCatIds.size === 1){
+    const label = catLabel([...selectedCatIds][0]).toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    zipName = `datavez-${label}-backup.zip`;
+  }else{
+    zipName = `datavez-backup-${new Date().toISOString().slice(0,10)}.zip`;
+  }
+
+  const file = new File([blob], zipName, {type:'application/zip'});
+  closeExportView();
+
+  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({files:[file], title:'Datavez Backup'});
+      showToast('Exported & shared ✓');
+      return;
+    }catch(e){
+      if(e.name === 'AbortError'){ return; }
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = zipName; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Downloaded — check notification shade or Files > Download');
+}
+
+// ---- Import ----
+function guessMimeFromExt(filename){
+  const ext = (filename.split('.').pop()||'').toLowerCase();
+  const map = {
+    jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif', webp:'image/webp',
+    pdf:'application/pdf', zip:'application/zip', html:'text/html', htm:'text/html',
+    txt:'text/plain', doc:'application/msword',
+    docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xls:'application/vnd.ms-excel',
+    xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  };
+  return map[ext] || 'application/octet-stream';
+}
+
+let pendingZipImport = null;
+let importSelectedCat = null;
+
+document.getElementById('importFileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  e.target.value = '';
+
+  const isZip = file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip';
+  if(isZip){
+    await handleZipImport(file);
+  }else{
+    await handleJsonImport(file);
+  }
+});
+
+async function handleJsonImport(file){
+  try{
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    if(!payload || !Array.isArray(payload.documents)){
+      showToast('Invalid backup file');
+      return;
+    }
+    let addedDocs = 0;
+    const existingIds = new Set(docs.map(d=>d.id));
+    payload.documents.forEach(d=>{
+      if(d && d.id && !existingIds.has(d.id)){ docs.push(d); existingIds.add(d.id); addedDocs++; }
+    });
+    let addedCats = 0;
+    if(Array.isArray(payload.categories)){
+      const existingCatIds = new Set(categories.map(c=>c.id));
+      payload.categories.forEach(c=>{
+        if(c && c.id && !existingCatIds.has(c.id)){ categories.push(c); existingCatIds.add(c.id); addedCats++; }
+      });
+    }
+    await persistDocs();
+    await persistCategories();
+    closeView();
+    render();
+    showToast(`Imported ${addedDocs} record(s)${addedCats ? ', ' + addedCats + ' categor' + (addedCats===1?'y':'ies') : ''}`);
+  }catch(err){
+    showToast('Import failed — invalid file');
+  }
+}
+
+async function handleZipImport(file){
+  try{
+    const buffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(buffer);
+    const fileEntries = Object.keys(zip.files).filter(name => name !== 'manifest.json' && !zip.files[name].dir);
+    if(fileEntries.length === 0){ showToast('No files found in backup'); return; }
+
+    let manifestData = null;
+    if(zip.files['manifest.json']){
+      try{ manifestData = JSON.parse(await zip.files['manifest.json'].async('string')); }catch(e){}
+    }
+
+    pendingZipImport = { zip, fileEntries, manifestData };
+    openImportCategoryPicker(fileEntries.length);
+  }catch(err){
+    showToast('Import failed — invalid zip file');
+  }
+}
+
+function openImportCategoryPicker(count){
+  const sheet = document.getElementById('viewSheet');
+  sheet.innerHTML = `
+    <div class="sheet-title"><span>Import ${count} file(s)</span><span class="close" onclick="cancelZipImport()">&times;</span></div>
+    <div class="preview-note" style="margin-bottom:4px">Choose a category to file these imported records under.</div>
+    <label>Category</label>
+    <div class="cat-picker" id="importCatPicker"></div>
+    <div class="inline-add" id="importInlineAddCat" style="display:none">
+      <input type="text" id="importNewCatName" placeholder="Category name">
+      <button onclick="confirmImportNewCategory()">Add</button>
+    </div>
+    <button class="btn btn-primary" onclick="confirmZipImport()">Import</button>
+  `;
+  renderImportCatPicker(categories[0] ? categories[0].id : 'other');
+  document.getElementById('viewOverlay').classList.add('open');
+}
+function renderImportCatPicker(sel){
+  importSelectedCat = sel;
+  const picker = document.getElementById('importCatPicker');
+  picker.innerHTML = categories.map(c =>
+    `<div class="cat-opt ${c.id===sel?'selected':''}" onclick="renderImportCatPicker('${c.id}')">${escapeHtml(c.label)}</div>`
+  ).join('') + `<div class="cat-opt add-new" onclick="showImportInlineAddCat()">+ New</div>`;
+}
+function showImportInlineAddCat(){
+  document.getElementById('importInlineAddCat').style.display = 'flex';
+  document.getElementById('importNewCatName').focus();
+}
+async function confirmImportNewCategory(){
+  const name = document.getElementById('importNewCatName').value.trim();
+  if(!name){ showToast('Enter a category name'); return; }
+  const id = 'cat_' + name.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') + '_' + Date.now().toString(36).slice(-4);
+  categories.push({id, label:name});
+  await persistCategories();
+  document.getElementById('importNewCatName').value = '';
+  document.getElementById('importInlineAddCat').style.display = 'none';
+  renderImportCatPicker(id);
+}
+function cancelZipImport(){
+  pendingZipImport = null;
+  closeView();
+}
+async function confirmZipImport(){
+  if(!pendingZipImport){ closeView(); return; }
+  const { zip, fileEntries, manifestData } = pendingZipImport;
+  const catId = importSelectedCat;
+  let added = 0;
+
+  for(const filename of fileEntries){
+    try{
+      const entryMeta = manifestData && manifestData.entries ? manifestData.entries.find(en=>en.filename===filename) : null;
+      const displayName = entryMeta ? entryMeta.name : filename.replace(/\.[^.]+$/, '');
+
+      if(entryMeta && entryMeta.type === 'note'){
+        const content = await zip.files[filename].async('string');
+        docs.push({
+          id: 'doc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+          name: displayName, category: catId, type:'note', content,
+          status:'active', createdAt: Date.now()
+        });
+      }else{
+        const base64 = await zip.files[filename].async('base64');
+        const mime = guessMimeFromExt(filename);
+        const dataUrl = `data:${mime};base64,${base64}`;
+        docs.push({
+          id: 'doc_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+          name: displayName, category: catId, type:'file',
+          note: entryMeta ? (entryMeta.note||'') : '',
+          image: dataUrl, fileName: filename, fileType: mime,
+          status:'active', createdAt: Date.now()
+        });
+      }
+      added++;
+    }catch(e){}
+  }
+
+  await persistDocs();
+  pendingZipImport = null;
+  closeView();
+  render();
+  showToast(`Imported ${added} record(s) into "${catLabel(catId)}"`);
+}
+
+function downloadDoc(id){
+  document.getElementById('menuDropdown').classList.remove('open');
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+
+  if(d.type === 'note'){
+    const blob = new Blob([d.content || ''], {type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = d.name.replace(/\s+/g,'_') + '.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Downloaded ✓');
+    return;
+  }
+
+  const a = document.createElement('a');
+  a.href = d.image;
+  a.download = d.fileName || (d.name.replace(/\s+/g,'_') + '.jpg');
+  a.click();
+  showToast('Downloaded ✓');
+}
+async function deleteDoc(id){
+  document.getElementById('menuDropdown').classList.remove('open');
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  d.status = 'trash';
+  d.trashedAt = Date.now();
+  await persistDocs();
+  closeFullscreen();
+  showToast('Moved to trash — auto-deletes in 30 days');
+}
+async function restoreDoc(id){
+  document.getElementById('menuDropdown').classList.remove('open');
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  d.status = 'active';
+  delete d.trashedAt;
+  await persistDocs();
+  closeFullscreen();
+  showToast('Restored ✓');
+}
+async function permanentDelete(id){
+  document.getElementById('menuDropdown').classList.remove('open');
+  docs = docs.filter(x=>x.id!==id);
+  await persistDocs();
+  closeFullscreen();
+  showToast('Deleted forever');
+}
+
+// close overlays on backdrop click
+document.getElementById('addOverlay').addEventListener('click', e=>{ if(e.target.id==='addOverlay') closeAddModal(); });
+document.getElementById('viewOverlay').addEventListener('click', e=>{ if(e.target.id==='viewOverlay') closeView(); });
+
+async function checkPendingShare(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('shared') !== '1') return;
+
+  try{
+    const db = await openDB();
+    const pending = await new Promise((resolve, reject)=>{
+      const tx = db.transaction('shareQueue', 'readonly');
+      const req = tx.objectStore('shareQueue').get('pending');
+      req.onsuccess = ()=> resolve(req.result);
+      req.onerror = ()=> reject(req.error);
+    });
+
+    if(pending && pending.data){
+      // clear the queue entry so it isn't picked up again
+      await new Promise((resolve, reject)=>{
+        const tx = db.transaction('shareQueue', 'readwrite');
+        tx.objectStore('shareQueue').delete('pending');
+        tx.oncomplete = resolve;
+        tx.onerror = ()=> reject(tx.error);
+      });
+
+      const blob = new Blob([pending.data], {type: pending.type});
+      const reader = new FileReader();
+      reader.onload = (ev)=>{
+        openAddModal();
+        pendingFile = ev.target.result;
+        pendingFileName = pending.name;
+        pendingFileType = pending.type;
+
+        const drop = document.getElementById('fileDrop');
+        drop.classList.add('has-file');
+        if(isImageType(pendingFileType)){
+          drop.innerHTML = `<img src="${pendingFile}"><div>Tap to change file</div>`;
+        }else{
+          drop.innerHTML = `<div style="padding:8px 0">${svgDoc()}<div style="margin-top:6px">${escapeHtml(pending.name)}</div><div style="margin-top:4px;font-size:11px">Tap to change file</div></div>`;
+        }
+        document.getElementById('docName').value = pending.name.replace(/\.[^.]+$/, '');
+        showToast('File received — fill details & save');
+      };
+      reader.readAsDataURL(blob);
+    }
+  }catch(e){}
+
+  history.replaceState(null, '', window.location.pathname);
+}
+
+// ---- Settings & theme ----
+const THEMES = [
+  {id:'purple', label:'Purple', c1:'#7C3AED', c2:'#4F46E5'},
+  {id:'blue', label:'Blue', c1:'#2563EB', c2:'#0EA5E9'},
+  {id:'green', label:'Green', c1:'#059669', c2:'#10B981'},
+  {id:'rose', label:'Rose', c1:'#E11D48', c2:'#F43F5E'}
+];
+let currentTheme = 'purple';
+
+async function loadTheme(){
+  try{
+    const saved = await idbGetMeta('theme');
+    currentTheme = saved || 'purple';
+  }catch(e){ currentTheme = 'purple'; }
+  applyTheme(currentTheme);
+}
+function applyTheme(id){
+  currentTheme = id;
+  if(id === 'purple'){
+    document.documentElement.removeAttribute('data-theme');
+  }else{
+    document.documentElement.setAttribute('data-theme', id);
+  }
+}
+async function selectTheme(id){
+  applyTheme(id);
+  try{ await idbSetMeta('theme', id); }catch(e){}
+  renderSettings();
+}
+
+function openSettingsView(){
+  document.getElementById('settingsView').classList.add('open');
+  renderSettings();
+}
+function closeSettingsView(){
+  document.getElementById('settingsView').classList.remove('open');
+}
+function renderSettings(){
+  const el = document.getElementById('settingsContent');
+  const swatches = THEMES.map(t => `
+    <div class="theme-swatch ${currentTheme===t.id?'active':''}" style="background:linear-gradient(135deg, ${t.c1}, ${t.c2})" onclick="selectTheme('${t.id}')" title="${t.label}"></div>
+  `).join('');
+
+  el.innerHTML = `
+    <div class="settings-label" style="margin-bottom:10px">App theme</div>
+    <div class="theme-swatch-row" style="margin-bottom:26px">${swatches}</div>
+
+    <div class="settings-row" onclick="closeSettingsView();openBackupSheet()" style="cursor:pointer">
+      <div>
+        <div class="settings-label">Backup &amp; Restore</div>
+        <div class="settings-sub">Export or import your records</div>
+      </div>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">About Datavez</div>
+        <div class="settings-sub">Local, private document vault — v1.0</div>
+      </div>
+    </div>
+  `;
+}
+
+// ---- Install prompt ----
+let deferredInstallPrompt = null;
+const isStandaloneApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if(!isStandaloneApp){
+    document.getElementById('installBanner').classList.add('show');
+  }
+});
+
+async function installApp(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById('installBanner').classList.remove('show');
+}
+function dismissInstallBanner(){
+  document.getElementById('installBanner').classList.remove('show');
+}
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').classList.remove('show');
+  deferredInstallPrompt = null;
+});
+
+loadAll().then(checkPendingShare);
+loadTheme();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
